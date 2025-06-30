@@ -5,9 +5,16 @@ import { ApiRequestLog } from '../entities/apiRequestLog.entity';
 
 export function apiKeyMiddleware(req: Request, res: Response, next: NextFunction) {
   const apiKeyHeader = req.headers['x-api-key'];
-  const validKeys = (config.get<string>('gatewayApiKey') || '').split(',').map(k => k.trim());
-  const start = Date.now();
+  const validKeys = (config.get<string>('gatewayApiKey') || '')
+    .split(',')
+    .map(k => k.trim())
+    .filter(Boolean);
 
+  if (validKeys.length === 0) {
+    return res.status(500).json({ error: 'Server misconfiguration: No API keys set' });
+  }
+
+  const start = Date.now();
   res.on('finish', async () => {
     const durationMs = Date.now() - start;
     const log = new ApiRequestLog();

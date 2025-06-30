@@ -6,11 +6,11 @@ import { apiKeyMiddleware } from '../middleware/apiKey';
 
 const router = express.Router();
 
+router.get('/success', paymentSuccessHandler);
 router.use(apiKeyMiddleware);
 
-router.post('/intiatePayment', validate(createCheckoutZodSchema), intiatePayment);
+router.post('/initiatePayment', validate(createCheckoutZodSchema), intiatePayment);
 router.get('/order/:orderId', getOrderDetails);
-router.get('/success', paymentSuccessHandler);
 router.get('/failure', paymentFailureHandler);
 router.post('/webhook', paymentWebhookHandler);
 

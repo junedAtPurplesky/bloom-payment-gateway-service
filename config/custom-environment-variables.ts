@@ -24,4 +24,8 @@ export default {
   brevoSenderEmail: 'BREVO_SENDER_EMAIL',
   brevoSenderName: 'BREVO_SENDER_NAME',
   gatewayApiKey: 'GATEWAY_API_KEY',
+  apiKey: 'FISERV_API_KEY',
+  apiSecret: 'FISERV_API_SECRET',
+  checkoutUrl: 'CHECKOUT_URL',
+  orderDetailsUrl: 'ORDER_DETAILS_URL',
 };
