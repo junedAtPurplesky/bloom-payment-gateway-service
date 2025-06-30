@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import config from 'config';
 
 import { createSignature } from '../helpers';
 
@@ -13,6 +14,13 @@ export const createCheckoutService = async (body: any) => {
   const timestamp = Date.now().toString();
   const rawSignature = API_KEY + clientRequestId + timestamp + JSON.stringify(body);
   const messageSignature = createSignature(rawSignature, API_SECRET);
+
+  // Inject redirectBackUrls from config
+  body.checkoutSettings = body.checkoutSettings || {};
+  body.checkoutSettings.redirectBackUrls = {
+    successUrl: config.get('paymentRedirectSuccessUrl'),
+    failureUrl: config.get('paymentRedirectFailureUrl'),
+  };
 
   const headers = {
     'Api-Key': API_KEY,

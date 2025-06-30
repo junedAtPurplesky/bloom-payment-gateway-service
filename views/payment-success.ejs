@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f8fa; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .container { background: #fff; padding: 2rem 3rem; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); text-align: center; }
+    .checkmark { font-size: 4rem; color: #27ae60; margin-bottom: 1rem; }
+    h1 { margin: 0 0 0.5rem 0; }
+    p { color: #555; margin-bottom: 2rem; }
+    .order-id { color: #333; font-weight: bold; margin-bottom: 1.5rem; }
+    .btn { background: #27ae60; color: #fff; padding: 0.75rem 2rem; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; text-decoration: none; }
+    .btn:hover { background: #219150; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="checkmark">✔️</div>
+    <h1>Payment Successful!</h1>
+    <p>Thank you for your payment. Your transaction was completed successfully.</p>
+    <% if (orderId) { %>
+      <div class="order-id">Order ID: <%= orderId %></div>
+    <% } %>
+    <a href="#" class="btn" onclick="goBack()">Return Home</a>
+  </div>
+  <script>
+    function goBack() {
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage('close');
+      } else {
+        window.location.href = '/';
+      }
+    }
+  </script>
+</body>
+</html> 

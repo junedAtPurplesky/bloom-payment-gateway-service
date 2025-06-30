@@ -1,5 +1,7 @@
+/// <reference types="../../types/sib-api-v3-sdk" />
 import * as sib from "sib-api-v3-sdk";
 import AppError from "./appError";
+import config from "config";
 
 const sendEmail = async (
   toEmail: string,
@@ -7,8 +9,8 @@ const sendEmail = async (
   params: object
 ) => {
   try {
-    const apiKey = process.env.BREVO_API_KEY_EMAIL;
-    if (!apiKey) throw new AppError(404,"Brevo API key not found");
+    const apiKey = config.get<string>("brevoApiKeyEmail");
+    if (!apiKey) throw new AppError(404, "Brevo API key not found");
 
     const client = sib.ApiClient.instance;
     const apiKeyInstance = client.authentications["api-key"];
@@ -17,8 +19,8 @@ const sendEmail = async (
     const emailApi = new sib.TransactionalEmailsApi();
 
     const sender = {
-      email: process.env.BREVO_SENDER_EMAIL,
-      name: process.env.BREVO_SENDER_NAME,
+      email: config.get<string>("brevoSenderEmail"),
+      name: config.get<string>("brevoSenderName"),
     };
     const receivers = [{ email: toEmail }];
 
@@ -26,7 +28,7 @@ const sendEmail = async (
       sender,
       to: receivers,
       templateId,
-      params
+      params,
     };
     const resEmail = await emailApi.sendTransacEmail(sendSmtpEmail);
     console.log("resEmail", resEmail);

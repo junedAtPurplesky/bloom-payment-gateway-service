@@ -5,12 +5,14 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
+import path from 'path';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 import { AppDataSource } from './utils/data-source';
 import AppError from './utils/appError';
-import authRouter from './routes/auth.routes';
-import userRouter from './routes/user.routes';
 import validateEnv from './utils/validateEnv';
+import { paymentGatewayRouter } from './routes/payment.routes';
 
 
 (async function () {
@@ -45,16 +47,26 @@ AppDataSource.initialize()
       })
     );
 
+    app.use(helmet());
+
+    // Rate limiting for gateway routes
+    const gatewayLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 50, // limit each IP to 100 requests per windowMs
+      message: 'Too many requests from this IP, please try again later.'
+    });
+
+    app.use('/api/gateway', gatewayLimiter);
+
     // ROUTES
-    app.use('/api/auth', authRouter);
-    app.use('/api/users', userRouter);
+    app.use('/api/gateway/payment', paymentGatewayRouter);
 
     // HEALTH CHECKER
     app.get('/api/healthChecker', async (_, res: Response) => {
 
       res.status(200).json({
         status: 'success',
-        message: 'Welcome to Node.js, we are happy to see you',
+        message: 'Welcome to Payment Gateway, lets get started',
       });
     });
 
@@ -75,6 +87,9 @@ AppDataSource.initialize()
         });
       }
     );
+
+    app.set('view engine', 'ejs');
+    app.set('views', path.join(__dirname, '../views'));
 
     const port = config.get<number>('port');
     app.listen(port);

@@ -23,6 +23,10 @@
     "build",
     "dist",
     "**/*.spec.ts"
+  ],
+  "typeRoots": [
+    "./node_modules/@types",
+    "./types"
   ]
 }
 

@@ -19,4 +19,9 @@ export default {
     port: 'EMAIL_PORT',
     user: 'EMAIL_USER',
   },
+
+  brevoApiKeyEmail: 'BREVO_API_KEY_EMAIL',
+  brevoSenderEmail: 'BREVO_SENDER_EMAIL',
+  brevoSenderName: 'BREVO_SENDER_NAME',
+  gatewayApiKey: 'GATEWAY_API_KEY',
 };

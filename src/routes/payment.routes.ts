@@ -1,15 +1,16 @@
 import express from "express";
-import { deserializeUser } from "../middleware/deserializeUser";
-import { requireUser } from "../middleware/requireUser";
-import { paymentController } from '../controllers/payment.controller';
+import { intiatePayment, getOrderDetails, paymentSuccessHandler, paymentFailureHandler } from '../controllers/payment.controller';
 import { validate } from '../middleware/validate';
-import { createCheckoutSchema } from "schemas/payment.schema";
+import { createCheckoutZodSchema } from '../schemas/payment.schema';
+import { apiKeyMiddleware } from '../middleware/apiKey';
 
 const router = express.Router();
 
-// Ensure user is authenticated
-router.use(deserializeUser, requireUser);
+router.use(apiKeyMiddleware);
 
-router.post('/initiatePayment', validate(createCheckoutSchema), paymentController().initiatePayment);
+router.post('/intiatePayment', validate(createCheckoutZodSchema), intiatePayment);
+router.get('/order/:orderId', getOrderDetails);
+router.get('/success', paymentSuccessHandler);
+router.get('/failure', paymentFailureHandler);
 
-export { router as paymentRouter };
+export { router as paymentGatewayRouter };
