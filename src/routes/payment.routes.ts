@@ -1,5 +1,5 @@
 import express from "express";
-import { intiatePayment, getOrderDetails, paymentSuccessHandler, paymentFailureHandler } from '../controllers/payment.controller';
+import { intiatePayment, getOrderDetails, paymentSuccessHandler, paymentFailureHandler, paymentWebhookHandler } from '../controllers/payment.controller';
 import { validate } from '../middleware/validate';
 import { createCheckoutZodSchema } from '../schemas/payment.schema';
 import { apiKeyMiddleware } from '../middleware/apiKey';
@@ -12,5 +12,6 @@ router.post('/intiatePayment', validate(createCheckoutZodSchema), intiatePayment
 router.get('/order/:orderId', getOrderDetails);
 router.get('/success', paymentSuccessHandler);
 router.get('/failure', paymentFailureHandler);
+router.post('/webhook', paymentWebhookHandler);
 
 export { router as paymentGatewayRouter };

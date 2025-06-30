@@ -4,7 +4,7 @@ import config from 'config';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import nodemailer from 'nodemailer';
+// import nodemailer from 'nodemailer';
 import path from 'path';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -15,10 +15,10 @@ import validateEnv from './utils/validateEnv';
 import { paymentGatewayRouter } from './routes/payment.routes';
 
 
-(async function () {
-  const credentials = await nodemailer.createTestAccount();
-  console.log(credentials);
-})();
+// (async function () {
+//   const credentials = await nodemailer.createTestAccount();
+//   console.log(credentials);
+// })();
 
 AppDataSource.initialize()
   .then(async () => {
