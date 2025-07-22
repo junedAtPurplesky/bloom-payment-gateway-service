@@ -1,0 +1,29 @@
+{
+  "origin": "https://preprod.bloom.com",
+  "accessTokenExpiresIn": 1440,
+  "refreshTokenExpiresIn": 1440,
+  "emailFrom": "noreply@bloom.com",
+  "brevoApiKeyEmail": "",
+  "brevoSenderEmail": "noreply@bloom.com",
+  "brevoSenderName": "Bloom Payment Gateway",
+  "gatewayApiKey": "",
+  "paymentRedirectSuccessUrl": "https://preprod.bloom.com/payment/success",
+  "paymentRedirectFailureUrl": "https://preprod.bloom.com/payment/failure",
+  "checkoutUrl": "https://prod.emea.api.fiservapps.com/exp/v1/checkouts",
+  "orderDetailsUrl": "https://prod.emea.api.fiservapps.com/ipp/payments-gateway/v2/orders",
+  "apiKey": "",
+  "apiSecret": "",
+  "paymentWebhookUrl": "https://api-preprod.bloom.com/api/gateway/payment/webhook",
+  "dynatrace": {
+    "enabled": true,
+    "environment": "preprod"
+  },
+  "salesforce": {
+    "enabled": true,
+    "baseUrl": "https://test.salesforce.com",
+    "clientId": "",
+    "clientSecret": "",
+    "username": "",
+    "password": ""
+  }
+} 

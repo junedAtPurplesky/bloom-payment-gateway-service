@@ -1,0 +1,25 @@
+{
+  "origin": "*",
+  "accessTokenExpiresIn": 1440,
+  "refreshTokenExpiresIn": 1440,
+  "emailFrom": "uat@bloom.com",
+  "brevoApiKeyEmail": "",
+  "brevoSenderEmail": "",
+  "brevoSenderName": "",
+  "gatewayApiKey": "",
+  "paymentRedirectSuccessUrl": "https://uat.bloom.com/api/gateway/payment/success",
+  "paymentRedirectFailureUrl": "https://uat.bloom.com/api/gateway/payment/failure",
+  "checkoutUrl": "https://prod.emea.api.fiservapps.com/sandbox/exp/v1/checkouts",
+  "orderDetailsUrl": "https://prod.emea.api.fiservapps.com/sandbox/ipp/payments-gateway/v2/orders",
+  "apiKey": "",
+  "apiSecret": "",
+  "paymentWebhookUrl": "https://uat.bloom.com/api/gateway/payment/webhook",
+  "postgresConfig": {
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "password",
+    "database": "bloom_payment_gateway_uat"
+  },
+  "port": 3000
+} 

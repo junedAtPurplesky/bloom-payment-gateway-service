@@ -1,25 +1,28 @@
-
+version: '3.8'
 
 services:
   app:
-    image: bloom-payment-gateway-service:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bloom-payment-gateway-service:uat
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=uat
       - PORT=3000
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=bloom_payment_gateway_dev
+      - POSTGRES_DB=bloom_payment_gateway_uat
       - JWT_ACCESS_TOKEN_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKB\nvVXrz2VsbC44mR2Gr55hjlBGhh9kwm0nutEsR2mRjS2N51ry9CW0oAh3gqBObfN\n-----END PRIVATE KEY-----
       - JWT_ACCESS_TOKEN_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCgb1V689l\nbGwuOJkdhq+eYY5QRoYfZMJtJ7rRLEdpkY0tjedacvQltKAId4KgTm3zQjWF4x\n-----END PUBLIC KEY-----
       - JWT_REFRESH_TOKEN_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKB\nvVXrz2VsbC44mR2Gr55hjlBGhh9kwm0nutEsR2mRjS2N51ry9CW0oAh3gqBObfN\n-----END PRIVATE KEY-----
       - JWT_REFRESH_TOKEN_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCgb1V689l\nbGwuOJkdhq+eYY5QRoYfZMJtJ7rRLEdpkY0tjedacvQltKAId4KgTm3zQjWF4x\n-----END PUBLIC KEY-----
-      - GATEWAY_API_KEY=8JJDqCWptrjm6fF5HoB7KUuCCRS2LsTs1YYAhra1VuDdQgG0SfKT3PdcTUHSHbk4NqmGRuk8tparu7yIAzS2Oa6x2edgoyPcZ7cddkuc0c5y5AXMAqXYXBUFsN9oBW2c
-      - FISERV_API_KEY=guu7gs1XhGsCkq0YMcFsbXBandW8jUAu
-      - FISERV_API_SECRET=m0CO2odX602aMeqJSbQsgjqYGLsNBU1NgGQ7xLkeYhM
+      - GATEWAY_API_KEY=${GATEWAY_API_KEY}
+      - FISERV_API_KEY=${FISERV_API_KEY}
+      - FISERV_API_SECRET=${FISERV_API_SECRET}
     depends_on:
       - postgres
     volumes:
@@ -33,18 +36,18 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=bloom_payment_gateway_dev
+      - POSTGRES_DB=bloom_payment_gateway_uat
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
+      - postgres_data_uat:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - payment-network
 
 volumes:
-  postgres_data_dev:
+  postgres_data_uat:
 
 networks:
   payment-network:
-    driver: bridge
+    driver: bridge 

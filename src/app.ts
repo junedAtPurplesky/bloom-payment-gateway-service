@@ -8,12 +8,16 @@ import cors from 'cors';
 import path from 'path';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 
 import { AppDataSource } from './utils/data-source';
 import AppError from './utils/appError';
 import validateEnv from './utils/validateEnv';
 import { paymentGatewayRouter } from './routes/payment.routes';
-
+import { apiLogger } from './middleware/logger';
+import { specs } from './utils/swagger';
+import { dynatraceService } from './utils/dynatrace';
+import { salesforceService } from './services/salesforce.service';
 
 // (async function () {
 //   const credentials = await nodemailer.createTestAccount();
@@ -36,10 +40,13 @@ AppDataSource.initialize()
     // 2. Logger
     if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
-    // 3. Cookie Parser
+    // 3. API Logger (custom logging)
+    app.use(apiLogger);
+
+    // 4. Cookie Parser
     app.use(cookieParser());
 
-    // 4. Cors
+    // 5. Cors
     app.use(
       cors({
         origin: config.get<string>('origin'),
@@ -47,7 +54,23 @@ AppDataSource.initialize()
       })
     );
 
-    app.use(helmet());
+    // Configure helmet with CSP that allows inline scripts for payment pages
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+          imgSrc: ["'self'", "data:"],
+          fontSrc: ["'self'", "https:", "data:"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'self'"],
+          upgradeInsecureRequests: []
+        }
+      }
+    }));
 
     // Rate limiting for gateway routes
     const gatewayLimiter = rateLimit({
@@ -58,15 +81,30 @@ AppDataSource.initialize()
 
     app.use('/api/gateway', gatewayLimiter);
 
+    // Swagger Documentation
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'Bloom Payment Gateway API Documentation'
+    }));
+
     // ROUTES
     app.use('/api/gateway/payment', paymentGatewayRouter);
 
     // HEALTH CHECKER
     app.get('/api/healthChecker', async (_, res: Response) => {
-
+      const dynatraceStatus = dynatraceService.getStatus();
+      const salesforceStatus = salesforceService.getStatus();
+      
       res.status(200).json({
         status: 'success',
         message: 'Welcome to Payment Gateway, lets get started',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        services: {
+          database: 'connected',
+          dynatrace: dynatraceStatus,
+          salesforce: salesforceStatus
+        }
       });
     });
 

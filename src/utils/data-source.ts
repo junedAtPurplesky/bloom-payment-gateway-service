@@ -2,7 +2,7 @@ require('dotenv').config();
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import config from 'config';
-import { PaymentTransaction, ApiRequestLog, WebhookEvent } from '../entities';
+import { PaymentTransaction } from '../entities';
 
 const postgresConfig = config.get<{
   host: string;
@@ -22,9 +22,7 @@ export const AppDataSource = new DataSource({
   logging: process.env.NODE_ENV === 'development', // Log SQL queries in development
   entities: [
     `${isProd ? 'build' :'src'}/entities/**/*.entity{.ts,.js}`,
-    PaymentTransaction,
-    ApiRequestLog,
-    WebhookEvent
+    PaymentTransaction
   ],
   migrations: [`${isProd ? 'build' :'src'}/migrations/**/*{.ts,.js}`],
   subscribers: [`${isProd ? 'build' :'src'}/subscribers/**/*{.ts,.js}`],

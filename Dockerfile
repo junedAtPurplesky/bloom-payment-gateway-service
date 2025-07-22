@@ -1,25 +1,36 @@
-# ---- Build Stage ----
-FROM node:18-alpine AS builder
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
-# ---- Production Stage ----
+# Use Node.js 18 Alpine as base image
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Only copy production dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm install --production
+COPY yarn.lock ./
 
-# Copy built app from builder stage
-COPY --from=builder /usr/src/app ./
+# Install dependencies
+RUN yarn install --frozen-lockfile
 
+# Copy source code
+COPY . .
+
+# Build the application
+RUN yarn build
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+# Start the application
+CMD ["yarn", "start"]

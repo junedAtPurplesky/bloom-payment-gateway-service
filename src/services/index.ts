@@ -1,3 +1,2 @@
-export * from './user.service';
-export * from './session.service';
 export * from './payment.service';
+export * from './salesforce.service';

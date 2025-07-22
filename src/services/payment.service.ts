@@ -4,6 +4,7 @@ import config from 'config';
 import { AppDataSource } from '../utils/data-source';
 import { PaymentTransaction } from '../entities/paymentTransaction.entity';
 import { createSignature } from '../helpers';
+import { dynatraceService } from '../utils/dynatrace';
 
 const API_KEY = config.get<string>('apiKey');
 const API_SECRET = config.get<string>('apiSecret');
@@ -31,6 +32,13 @@ interface PaymentInput {
   transactionOrigin: string;
   transactionAmount: PaymentAmount;
   order: PaymentOrder;
+  checkoutSettings: {
+    webHooksUrl: string;
+    redirectBackUrls: {
+      successUrl: string;
+      failureUrl: string;
+    };
+  }
 }
 
 export const createCheckoutService = async (
@@ -39,6 +47,7 @@ export const createCheckoutService = async (
 ) => {
   const clientRequestId = uuidv4();
   const timestamp = Date.now();
+  const startTime = Date.now();
 
   const body = {
     storeId: input.storeId,
@@ -46,10 +55,10 @@ export const createCheckoutService = async (
     transactionOrigin: input.transactionOrigin,
     transactionAmount: input.transactionAmount,
     checkoutSettings: {
-      webHooksUrl: config.get<string>('paymentWebhookUrl'),
+      webHooksUrl: input.checkoutSettings.webHooksUrl,
       redirectBackUrls: {
-        successUrl: config.get<string>('paymentRedirectSuccessUrl'),
-        failureUrl: config.get<string>('paymentRedirectFailureUrl'),
+        successUrl: input.checkoutSettings.redirectBackUrls.successUrl,
+        failureUrl: input.checkoutSettings.redirectBackUrls.successUrl,
       },
     },
     order: input.order,
@@ -68,8 +77,17 @@ export const createCheckoutService = async (
   };
 
   try {
+    // Trace outgoing request to Fiserv API
+    const apiStartTime = Date.now();
     const response = await axios.post(CHECKOUT_URL, requestBody, { headers });
-    await AppDataSource.manager.save(
+    const apiDuration = Date.now() - apiStartTime;
+    
+    // Log outgoing request to Dynatrace
+    await dynatraceService.traceOutgoingRequest(CHECKOUT_URL, 'POST', apiDuration);
+
+    // Save transaction to database with tracing
+    const dbStartTime = Date.now();
+    const transaction = await AppDataSource.manager.save(
       Object.assign(new PaymentTransaction(), {
         orderId: response.data.order?.orderId || '',
         amount: body.transactionAmount.total,
@@ -82,8 +100,32 @@ export const createCheckoutService = async (
         webhookReceived: false,
       })
     );
+    const dbDuration = Date.now() - dbStartTime;
+    
+    // Log database operation to Dynatrace
+    await dynatraceService.traceDatabaseOperation('INSERT', 'payment_transactions', dbDuration);
+
+    // Add custom metrics
+    await dynatraceService.addCustomMetric('payment_transactions_created', 1);
+    await dynatraceService.addCustomMetric('payment_amount_total', body.transactionAmount.total, 'Currency');
+
+    const totalDuration = Date.now() - startTime;
+    console.log(`[PAYMENT] Checkout completed in ${totalDuration}ms for order ${response.data.order?.orderId}`);
+
     return response.data;
   } catch (error) {
+    const totalDuration = Date.now() - startTime;
+    
+    // Log error to Dynatrace
+    if (error instanceof Error) {
+      await dynatraceService.logError(error, 'create_checkout_service', clientRequestId);
+    }
+
+    // Add error metrics
+    await dynatraceService.addCustomMetric('payment_transactions_failed', 1);
+
+    console.error(`[PAYMENT] Checkout failed after ${totalDuration}ms:`, error);
+
     if (axios.isAxiosError(error) && error.response) {
       return {
         status: error.response.status,
@@ -100,6 +142,8 @@ export const createCheckoutService = async (
 export const getOrderDetailsService = async (orderId: string) => {
   const clientRequestId = uuidv4();
   const timestamp = Date.now().toString();
+  const startTime = Date.now();
+  
   const rawSignature = API_KEY + clientRequestId + timestamp;
   const messageSignature = createSignature(rawSignature, API_SECRET);
 
@@ -112,6 +156,46 @@ export const getOrderDetailsService = async (orderId: string) => {
   };
 
   const url = `${ORDER_DETAILS_URL}/${orderId}`;
-  const response = await axios.get(url, { headers });
-  return response.data;
+  
+  try {
+    // Trace outgoing request to Fiserv API
+    const apiStartTime = Date.now();
+    const response = await axios.get(url, { headers });
+    const apiDuration = Date.now() - apiStartTime;
+    
+    // Log outgoing request to Dynatrace
+    await dynatraceService.traceOutgoingRequest(url, 'GET', apiDuration);
+
+    // Add custom metrics
+    await dynatraceService.addCustomMetric('order_details_requests', 1);
+
+    const totalDuration = Date.now() - startTime;
+    console.log(`[PAYMENT] Order details retrieved in ${totalDuration}ms for order ${orderId}`);
+
+    return response.data;
+  } catch (error) {
+    const totalDuration = Date.now() - startTime;
+    
+    // Log error to Dynatrace
+    if (error instanceof Error) {
+      await dynatraceService.logError(error, 'get_order_details_service', orderId);
+    }
+
+    // Add error metrics
+    await dynatraceService.addCustomMetric('order_details_requests_failed', 1);
+
+    console.error(`[PAYMENT] Order details failed after ${totalDuration}ms:`, error);
+
+    // Return proper error response from Fiserv instead of throwing
+    if (axios.isAxiosError(error) && error.response) {
+      return {
+        status: error.response.status,
+        data: error.response.data,
+      };
+    }
+    return {
+      status: 500,
+      data: { error: error instanceof Error ? error.message : 'Unknown error' },
+    };
+  }
 }; 

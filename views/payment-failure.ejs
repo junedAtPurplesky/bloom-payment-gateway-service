@@ -23,16 +23,27 @@
     <% if (orderId) { %>
       <div class="order-id">Order ID: <%= orderId %></div>
     <% } %>
-    <a href="#" class="btn" onclick="goBack()">Return Home</a>
+    <button class="btn" id="returnHomeBtn">Return Home</button>
   </div>
   <script>
     function goBack() {
       if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-        window.ReactNativeWebView.postMessage('close');
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'PAYMENT_FAILED',
+          action: 'CLOSE_WEBVIEW',
+          orderId: '<%= orderId %>'
+        }));
       } else {
-        window.location.href = '/';
+        window.close();
       }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const button = document.getElementById('returnHomeBtn');
+      if (button) {
+        button.addEventListener('click', goBack);
+      }
+    });
   </script>
 </body>
 </html> 

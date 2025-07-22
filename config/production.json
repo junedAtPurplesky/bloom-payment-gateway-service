@@ -1,0 +1,37 @@
+{
+  "origin": "https://bloom.com",
+  "accessTokenExpiresIn": 1440,
+  "refreshTokenExpiresIn": 1440,
+  "emailFrom": "noreply@bloom.com",
+  "brevoApiKeyEmail": "",
+  "brevoSenderEmail": "noreply@bloom.com",
+  "brevoSenderName": "Bloom Payment Gateway",
+  "gatewayApiKey": "",
+  "paymentRedirectSuccessUrl": "https://bloom.com/api/gateway/payment/success",
+  "paymentRedirectFailureUrl": "https://bloom.com/api/gateway/payment/failure",
+  "checkoutUrl": "https://prod.emea.api.fiservapps.com/exp/v1/checkouts",
+  "orderDetailsUrl": "https://prod.emea.api.fiservapps.com/ipp/payments-gateway/v2/orders",
+  "apiKey": "",
+  "apiSecret": "",
+  "paymentWebhookUrl": "https://bloom.com/api/gateway/payment/webhook",
+  "postgresConfig": {
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "password",
+    "database": "bloom_payment_gateway_prod"
+  },
+  "port": 3000,
+  "dynatrace": {
+    "enabled": true,
+    "environment": "production"
+  },
+  "salesforce": {
+    "enabled": true,
+    "baseUrl": "https://login.salesforce.com",
+    "clientId": "",
+    "clientSecret": "",
+    "username": "",
+    "password": ""
+  }
+} 
