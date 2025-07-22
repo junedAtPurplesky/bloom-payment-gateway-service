@@ -24,7 +24,9 @@ export default {
   port: parseInt(process.env.PORT || '3000'),
   dynatrace: {
     enabled: false,
-    environment: 'development'
+    environment: 'development',
+    beaconUrl: 'https://bf29631nmr.bf.dynatrace.com/mbeacon',
+    applicationId: 'ee7a8d6c-22a6-4639-a64e-35af8e380013'
   },
   salesforce: {
     enabled: process.env.SALESFORCE_ENABLED === 'true' || false,

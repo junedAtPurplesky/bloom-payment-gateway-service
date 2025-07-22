@@ -83,7 +83,11 @@ export const createCheckoutService = async (
     const apiDuration = Date.now() - apiStartTime;
     
     // Log outgoing request to Dynatrace
-    await dynatraceService.traceOutgoingRequest(CHECKOUT_URL, 'POST', apiDuration);
+    try {
+      await dynatraceService.traceOutgoingRequest(CHECKOUT_URL, 'POST', apiDuration);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to trace outgoing request:', dynatraceError);
+    }
 
     // Save transaction to database with tracing
     const dbStartTime = Date.now();
@@ -103,11 +107,19 @@ export const createCheckoutService = async (
     const dbDuration = Date.now() - dbStartTime;
     
     // Log database operation to Dynatrace
-    await dynatraceService.traceDatabaseOperation('INSERT', 'payment_transactions', dbDuration);
+    try {
+      await dynatraceService.traceDatabaseOperation('INSERT', 'payment_transactions', dbDuration);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to trace database operation:', dynatraceError);
+    }
 
     // Add custom metrics
-    await dynatraceService.addCustomMetric('payment_transactions_created', 1);
-    await dynatraceService.addCustomMetric('payment_amount_total', body.transactionAmount.total, 'Currency');
+    try {
+      await dynatraceService.addCustomMetric('payment_transactions_created', 1);
+      await dynatraceService.addCustomMetric('payment_amount_total', body.transactionAmount.total, 'Currency');
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to add custom metrics:', dynatraceError);
+    }
 
     const totalDuration = Date.now() - startTime;
     console.log(`[PAYMENT] Checkout completed in ${totalDuration}ms for order ${response.data.order?.orderId}`);
@@ -117,12 +129,19 @@ export const createCheckoutService = async (
     const totalDuration = Date.now() - startTime;
     
     // Log error to Dynatrace
-    if (error instanceof Error) {
-      await dynatraceService.logError(error, 'create_checkout_service', clientRequestId);
+    try {
+      const errorObj = error instanceof Error ? error : new Error('Checkout service error');
+      await dynatraceService.logError(errorObj, 'create_checkout_service', clientRequestId);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to log error:', dynatraceError);
     }
 
     // Add error metrics
-    await dynatraceService.addCustomMetric('payment_transactions_failed', 1);
+    try {
+      await dynatraceService.addCustomMetric('payment_transactions_failed', 1);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to add error metric:', dynatraceError);
+    }
 
     console.error(`[PAYMENT] Checkout failed after ${totalDuration}ms:`, error);
 
@@ -164,10 +183,18 @@ export const getOrderDetailsService = async (orderId: string) => {
     const apiDuration = Date.now() - apiStartTime;
     
     // Log outgoing request to Dynatrace
-    await dynatraceService.traceOutgoingRequest(url, 'GET', apiDuration);
+    try {
+      await dynatraceService.traceOutgoingRequest(url, 'GET', apiDuration);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to trace outgoing request:', dynatraceError);
+    }
 
     // Add custom metrics
-    await dynatraceService.addCustomMetric('order_details_requests', 1);
+    try {
+      await dynatraceService.addCustomMetric('order_details_requests', 1);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to add custom metric:', dynatraceError);
+    }
 
     const totalDuration = Date.now() - startTime;
     console.log(`[PAYMENT] Order details retrieved in ${totalDuration}ms for order ${orderId}`);
@@ -177,12 +204,19 @@ export const getOrderDetailsService = async (orderId: string) => {
     const totalDuration = Date.now() - startTime;
     
     // Log error to Dynatrace
-    if (error instanceof Error) {
-      await dynatraceService.logError(error, 'get_order_details_service', orderId);
+    try {
+      const errorObj = error instanceof Error ? error : new Error('Get order details service error');
+      await dynatraceService.logError(errorObj, 'get_order_details_service', orderId);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to log error:', dynatraceError);
     }
 
     // Add error metrics
-    await dynatraceService.addCustomMetric('order_details_requests_failed', 1);
+    try {
+      await dynatraceService.addCustomMetric('order_details_requests_failed', 1);
+    } catch (dynatraceError) {
+      console.error('[DYNATRACE] Failed to add error metric:', dynatraceError);
+    }
 
     console.error(`[PAYMENT] Order details failed after ${totalDuration}ms:`, error);
 

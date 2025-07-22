@@ -14,25 +14,14 @@ interface SalesforceConfig {
 interface SalesforceTokenResponse {
   access_token: string;
   instance_url: string;
-  token_type: string;
   expires_in: number;
-}
-
-interface PaymentStatusUpdateRequest {
-  operation: string;
-  data: {
-    paymentId: string;
-    status: string;
-    message: string;
-    gatewayReference: string;
-  };
 }
 
 class SalesforceService {
   private config: SalesforceConfig;
   private accessToken: string | null = null;
-  private tokenExpiry: number = 0;
   private instanceUrl: string | null = null;
+  private tokenExpiry: number = 0;
 
   constructor() {
     this.config = {
@@ -102,11 +91,15 @@ class SalesforceService {
       const tokenDuration = Date.now() - tokenStartTime;
       
       // Log token request to Dynatrace
-      await dynatraceService.traceOutgoingRequest(
-        `${this.config.baseUrl}/services/oauth2/token`,
-        'POST',
-        tokenDuration
-      );
+      try {
+        await dynatraceService.traceOutgoingRequest(
+          `${this.config.baseUrl}/services/oauth2/token`,
+          'POST',
+          tokenDuration
+        );
+      } catch (dynatraceError) {
+        console.error('[DYNATRACE] Failed to trace token request:', dynatraceError);
+      }
 
       this.accessToken = response.data.access_token;
       this.instanceUrl = response.data.instance_url;
@@ -118,7 +111,12 @@ class SalesforceService {
       return { token: this.accessToken, instanceUrl: this.instanceUrl };
     } catch (error: any) {
       // Log error to Dynatrace
-      await dynatraceService.logError(error, 'salesforce_token_request');
+      try {
+        const errorObj = error instanceof Error ? error : new Error('Salesforce authentication error');
+        await dynatraceService.logError(errorObj, 'salesforce_token_request');
+      } catch (dynatraceError) {
+        console.error('[DYNATRACE] Failed to log Salesforce error:', dynatraceError);
+      }
       
       console.error('Salesforce authentication failed:');
       console.error('Error:', error.message);
@@ -175,24 +173,37 @@ class SalesforceService {
       const queryDuration = Date.now() - queryStartTime;
       
       // Log query to Dynatrace
-      await dynatraceService.traceOutgoingRequest(
-        `${instanceUrl}/services/data/v58.0/query`,
-        'GET',
-        queryDuration
-      );
+      try {
+        await dynatraceService.traceOutgoingRequest(
+          `${instanceUrl}/services/data/v58.0/query`,
+          'GET',
+          queryDuration
+        );
+      } catch (dynatraceError) {
+        console.error('[DYNATRACE] Failed to trace Salesforce query:', dynatraceError);
+      }
 
       // Log successful payment status update
-      await dynatraceService.logTransaction({
-        transactionId: gatewayReference,
-        amount: 0,
-        currency: 'USD',
-        status: 'salesforce_updated',
-        merchantId: orderId,
-        customerId: 'salesforce'
-      });
+      try {
+        await dynatraceService.logTransaction({
+          transactionId: gatewayReference,
+          amount: 0,
+          currency: 'USD',
+          status: 'salesforce_updated',
+          merchantId: orderId,
+          customerId: 'salesforce'
+        });
+      } catch (dynatraceError) {
+        console.error('[DYNATRACE] Failed to log Salesforce transaction:', dynatraceError);
+      }
     } catch (error: any) {
       // Log error to Dynatrace
-      await dynatraceService.logError(error, 'salesforce_payment_update', orderId);
+      try {
+        const errorObj = error instanceof Error ? error : new Error('Salesforce payment update error');
+        await dynatraceService.logError(errorObj, 'salesforce_payment_update', orderId);
+      } catch (dynatraceError) {
+        console.error('[DYNATRACE] Failed to log Salesforce error:', dynatraceError);
+      }
       
       console.error('Failed to update payment status in Salesforce:', error.response?.data || error.message);
       
@@ -202,16 +213,16 @@ class SalesforceService {
   }
 
   /**
-   * Get Salesforce service status
+   * Get service status
    */
-  getStatus() {
+  getStatus(): { enabled: boolean; authenticated: boolean; instanceUrl: string | null } {
     return {
       enabled: this.config.enabled,
-      baseUrl: this.config.baseUrl,
-      hasValidToken: this.accessToken && Date.now() < this.tokenExpiry,
-      tokenExpiry: this.tokenExpiry
+      authenticated: !!(this.accessToken && Date.now() < this.tokenExpiry),
+      instanceUrl: this.instanceUrl
     };
   }
 }
 
+// Create singleton instance
 export const salesforceService = new SalesforceService(); 

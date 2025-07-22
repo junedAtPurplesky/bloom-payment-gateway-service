@@ -28,4 +28,10 @@ export default {
   apiSecret: 'FISERV_API_SECRET',
   checkoutUrl: 'CHECKOUT_URL',
   orderDetailsUrl: 'ORDER_DETAILS_URL',
+  dynatrace: {
+    enabled: 'DYNATRACE_ENABLED',
+    environment: 'DYNATRACE_ENVIRONMENT',
+    beaconUrl: 'DYNATRACE_BEACON_URL',
+    applicationId: 'DYNATRACE_APPLICATION_ID'
+  },
 };

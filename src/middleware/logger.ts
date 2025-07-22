@@ -23,13 +23,19 @@ export const apiLogger = (req: Request, res: Response, next: NextFunction) => {
     console.log(`[API] Response: ${JSON.stringify(data)}`);
     
     // Log to Dynatrace
-    dynatraceService.logApiCall({
-      endpoint: originalUrl,
-      method,
-      statusCode,
-      duration,
-      transactionId: req.body?.orderId || req.params?.orderId
-    });
+    try {
+      dynatraceService.logApiCall({
+        endpoint: originalUrl,
+        method,
+        statusCode,
+        duration,
+        transactionId: req.body?.orderId || req.params?.orderId
+      }).catch((dynatraceError) => {
+        console.error('[DYNATRACE] Failed to log API call:', dynatraceError);
+      });
+    } catch (error) {
+      console.error('[DYNATRACE] Failed to initiate API call logging:', error);
+    }
     
     return originalJson.call(this, data);
   };
